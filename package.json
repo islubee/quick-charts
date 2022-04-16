@@ -1,5 +1,8 @@
 {
-  "name": "simple-charts",
+  "name": "@islubee/quick-charts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/quick-charts"
+  },
   "version": "1.0.0",
   "description": "Simple charts for react",
   "main": "index.js",
