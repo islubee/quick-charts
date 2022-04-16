@@ -2,8 +2,6 @@
 
 Quick Charts is a simple chart library built with React and D3.
 
-![example](https://user-images.githubusercontent.com/4142016/163662694-03199150-8fc3-40a8-8839-4d67b01e0c3a.png)
-
 - Timeline
 - ScatterPlot
 - Histogram
