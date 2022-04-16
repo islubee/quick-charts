@@ -4,20 +4,22 @@ import commonjs from "@rollup/plugin-commonjs";
 import postcss from 'rollup-plugin-postcss';
 import external from 'rollup-plugin-peer-deps-external';
 import { terser } from 'rollup-plugin-terser';
-
+const packageJson = require("./package.json");
 
 export default [
   {
-    input: './src/index.js',
+    input: 'src/index.js',
     output: [
       {
         file: 'dist/index.js',
         format: 'cjs',
+        sourcemap: true,
       },
       {
         file: 'dist/index.es.js',
         format: 'es',
         exports: 'named',
+        sourcemap: true,
       }
     ],
     plugins: [

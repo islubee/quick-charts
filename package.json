@@ -3,9 +3,10 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/quick-charts"
   },
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Simple charts for react",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "start-storybook -p 6006",
