@@ -10,7 +10,7 @@ Quick Charts is a simple chart library built with React and D3.
 
 NPM
 ```bash
-npm install @islubee/quick-charts@1.0.4
+npm i quick-charts
 ```
 
 ## Usage
