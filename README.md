@@ -15,7 +15,7 @@ npm install @islubee/quick-charts@1.0.4
 
 ## Usage
 
-```react
+```JavaScript
 import React from "react"
 import { TimelineData, ScatterData } from "./dummyData"
 
