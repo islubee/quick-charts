@@ -1,4 +1,5 @@
-# Quick-Charts
+ ![NPM Package](https://img.shields.io/npm/v/quick-charts?color=green&label=npm%20package)
+ # Quick-Charts
 
 Quick Charts is a simple chart library built with React and D3.
 
