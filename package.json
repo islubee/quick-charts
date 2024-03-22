@@ -22,7 +22,7 @@
     "@storybook/addon-essentials": "^6.4.21",
     "@storybook/addon-interactions": "^6.4.21",
     "@storybook/addon-links": "^6.4.21",
-    "@storybook/react": "^6.4.21",
+    "@storybook/react": "^8.0.4",
     "@storybook/testing-library": "^0.0.9",
     "babel-loader": "^8.2.4",
     "d3": "^5.16.0",
