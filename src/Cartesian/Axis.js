@@ -1,13 +1,13 @@
 import React from "react"
 import PropTypes from "prop-types"
 import * as d3 from 'd3'
-import { dimensionsPropsType } from "../Utils/utils";
 import { useDimensionsContext } from "../Components/Chart";
 
 const axisComponentsByDimension = {
   x: AxisHorizontal,
   y: AxisVertical,
 }
+
 const Axis = ({ dimension, ...props }) => {
   const dimensions = useDimensionsContext()
   const Component = axisComponentsByDimension[dimension]
@@ -23,7 +23,6 @@ const Axis = ({ dimension, ...props }) => {
 
 Axis.propTypes = {
   dimension: PropTypes.oneOf(["x", "y"]),
-  dimensions: dimensionsPropsType,
   scale: PropTypes.func,
   label: PropTypes.string,
   formatTick: PropTypes.func,
@@ -39,6 +38,8 @@ export default Axis
 
 
 function AxisHorizontal ({ dimensions, label, formatTick, scale, ...props }) {
+  if (!scale) return null
+
   const numberOfTicks = dimensions.boundedWidth < 600
         ? dimensions.boundedWidth / 100
         : dimensions.boundedWidth / 250
@@ -54,7 +55,7 @@ function AxisHorizontal ({ dimensions, label, formatTick, scale, ...props }) {
 
       {ticks.map((tick, i) => (
         <text
-          key={tick}
+          key={`${tick}-${i}`}
           className="Axis__tick"
           transform={`translate(${scale(tick)}, 25)`}
         >
@@ -75,6 +76,8 @@ function AxisHorizontal ({ dimensions, label, formatTick, scale, ...props }) {
 }
 
 function AxisVertical ({ dimensions, label, formatTick, scale, ...props }) {
+  if (!scale) return null
+
   const numberOfTicks = dimensions.boundedHeight / 70
 
   const ticks = scale.ticks(numberOfTicks)
@@ -88,7 +91,7 @@ function AxisVertical ({ dimensions, label, formatTick, scale, ...props }) {
 
       {ticks.map((tick, i) => (
         <text
-          key={tick}
+          key={`${tick}-${i}`}
           className="Axis__tick"
           transform={`translate(-16, ${scale(tick)})`}
         >

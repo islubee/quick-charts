@@ -12,13 +12,26 @@ const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
     marginBottom: 77,
   })
 
+  if (!data || data.length === 0) return null
+
+  const xExtent = d3.extent(data, xAccessor)
+  const yExtent = d3.extent(data, yAccessor)
+
+  // Expand zero-width domains so a single unique value still renders visibly
+  const xDomain = xExtent[0] === xExtent[1]
+    ? [xExtent[0] - 1, xExtent[0] + 1]
+    : xExtent
+  const yDomain = yExtent[0] === yExtent[1]
+    ? [yExtent[0] - 1, yExtent[0] + 1]
+    : yExtent
+
   const xScale = d3.scaleLinear()
-    .domain(d3.extent(data, xAccessor))
+    .domain(xDomain)
     .range([0, dimensions.boundedWidth])
     .nice()
 
   const yScale = d3.scaleLinear()
-    .domain(d3.extent(data, yAccessor))
+    .domain(yDomain)
     .range([dimensions.boundedHeight, 0])
     .nice()
 
@@ -28,15 +41,13 @@ const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
 
   return (
     <div className="ScatterPlot" ref={ref}>
-      <Chart dimensions={dimensions}>
+      <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
         <Axis
-          dimensions={dimensions}
           dimension="x"
           scale={xScale}
           label={xLabel}
         />
         <Axis
-          dimensions={dimensions}
           dimension="y"
           scale={yScale}
           label={yLabel}
@@ -53,6 +64,7 @@ const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
 }
 
 ScatterPlot.propTypes = {
+  data: PropTypes.array,
   xAccessor: accessorPropsType,
   yAccessor: accessorPropsType,
   xLabel: PropTypes.string,
@@ -63,4 +75,5 @@ ScatterPlot.defaultProps = {
   xAccessor: d => d.x,
   yAccessor: d => d.y,
 }
+
 export default ScatterPlot

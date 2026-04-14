@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from '@testing-library/react'
-import Chart, { useDimensionsContext } from '../Components/Chart'
+import Chart from '../Components/Chart'
 
 const dimensions = {
   width: 600,
@@ -25,6 +25,16 @@ describe('Chart', () => {
   it('applies the Chart CSS class to the SVG', () => {
     const { container } = render(<Chart dimensions={dimensions} />)
     expect(container.querySelector('.Chart')).toBeInTheDocument()
+  })
+
+  it('has role="img" for accessibility', () => {
+    const { container } = render(<Chart dimensions={dimensions} />)
+    expect(container.querySelector('svg')).toHaveAttribute('role', 'img')
+  })
+
+  it('sets aria-label when label prop is provided', () => {
+    const { container } = render(<Chart dimensions={dimensions} label="My Chart" />)
+    expect(container.querySelector('svg')).toHaveAttribute('aria-label', 'My Chart')
   })
 
   it('translates the inner <g> by the left and top margins', () => {

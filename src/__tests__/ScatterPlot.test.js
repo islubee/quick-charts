@@ -57,6 +57,26 @@ describe('ScatterPlot', () => {
     expect(container.querySelectorAll('circle')).toHaveLength(5)
   })
 
+  it('renders nothing for empty data', () => {
+    const { container } = render(
+      <ScatterPlot data={[]} xAccessor={(d) => d.humidity} yAccessor={(d) => d.temperature} />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('handles data where all x values are identical', () => {
+    const data = Array.from({ length: 5 }, () => ({ humidity: 0.5, temperature: 70 }))
+    expect(() =>
+      render(
+        <ScatterPlot
+          data={data}
+          xAccessor={(d) => d.humidity}
+          yAccessor={(d) => d.temperature}
+        />
+      )
+    ).not.toThrow()
+  })
+
   it('uses default accessors when none are supplied', () => {
     const defaultData = makeData().map((d, i) => ({ x: d.humidity, y: d.temperature }))
     expect(() =>

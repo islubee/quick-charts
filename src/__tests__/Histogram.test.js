@@ -2,7 +2,6 @@ import React from 'react'
 import { render } from '@testing-library/react'
 import Histogram from '../Charts/Histogram'
 
-// Spread values across a range wide enough that D3's bin generator produces multiple bins
 const makeData = (n = 30) =>
   Array.from({ length: n }, (_, i) => ({
     humidity: 0.2 + (i / n) * 0.6,
@@ -14,7 +13,7 @@ describe('Histogram', () => {
       <Histogram
         data={makeData()}
         xAccessor={(d) => d.humidity}
-        label="Humidity"
+        xLabel="Humidity"
       />
     )
     expect(container.firstChild).toBeInTheDocument()
@@ -25,7 +24,7 @@ describe('Histogram', () => {
       <Histogram
         data={makeData()}
         xAccessor={(d) => d.humidity}
-        label="Humidity"
+        xLabel="Humidity"
       />
     )
     expect(container.querySelector('.Histogram')).toBeInTheDocument()
@@ -48,7 +47,6 @@ describe('Histogram', () => {
         xAccessor={(d) => d.humidity}
       />
     )
-    // D3 histogram with 9 thresholds over [0.2, 0.8] produces ~9 bins
     expect(container.querySelectorAll('.Bars__rect').length).toBeGreaterThan(0)
   })
 
@@ -62,10 +60,17 @@ describe('Histogram', () => {
     expect(container.querySelector('defs')).toBeInTheDocument()
   })
 
+  it('renders nothing for empty data', () => {
+    const { container } = render(
+      <Histogram data={[]} xAccessor={(d) => d.humidity} />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
   it('uses the default x-accessor when none is supplied', () => {
     const defaultData = makeData().map((d) => ({ x: d.humidity }))
     expect(() =>
-      render(<Histogram data={defaultData} label="X" />)
+      render(<Histogram data={defaultData} xLabel="X" />)
     ).not.toThrow()
   })
 })
