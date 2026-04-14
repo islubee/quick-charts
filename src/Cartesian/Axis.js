@@ -44,7 +44,13 @@ function AxisHorizontal ({ dimensions, label, formatTick, scale, ...props }) {
         ? dimensions.boundedWidth / 100
         : dimensions.boundedWidth / 250
 
-  const ticks = scale.ticks(numberOfTicks)
+  // scaleBand (categorical) has no .ticks() — use .domain() instead
+  const ticks = typeof scale.ticks === 'function'
+    ? scale.ticks(numberOfTicks)
+    : scale.domain()
+
+  // Center labels within each band for band/ordinal scales
+  const tickOffset = typeof scale.bandwidth === 'function' ? scale.bandwidth() / 2 : 0
 
   return (
     <g className="Axis AxisHorizontal" transform={`translate(0, ${dimensions.boundedHeight})`} {...props}>
@@ -57,7 +63,7 @@ function AxisHorizontal ({ dimensions, label, formatTick, scale, ...props }) {
         <text
           key={`${tick}-${i}`}
           className="Axis__tick"
-          transform={`translate(${scale(tick)}, 25)`}
+          transform={`translate(${scale(tick) + tickOffset}, 25)`}
         >
           { formatTick(tick) }
         </text>
