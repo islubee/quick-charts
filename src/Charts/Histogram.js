@@ -9,11 +9,14 @@ import Gradient from "../Components/Gradient"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils";
 
 const gradientColors = ["#9980FA", "rgb(226, 222, 243)"]
-const Histogram = ({ data, xAccessor, label }) => {
+
+const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
   const gradientId = useUniqueId("Histogram-gradient")
   const [ref, dimensions] = useChartDimensions({
     marginBottom: 77,
   })
+
+  if (!data || data.length === 0) return null
 
   const numberOfThresholds = 9
 
@@ -46,7 +49,7 @@ const Histogram = ({ data, xAccessor, label }) => {
 
   return (
     <div className="Histogram" ref={ref}>
-      <Chart dimensions={dimensions}>
+      <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
         <defs>
           <Gradient
             id={gradientId}
@@ -56,16 +59,14 @@ const Histogram = ({ data, xAccessor, label }) => {
           />
         </defs>
         <Axis
-          dimensions={dimensions}
           dimension="x"
           scale={xScale}
-          label={label}
+          label={xLabel}
         />
         <Axis
-          dimensions={dimensions}
           dimension="y"
           scale={yScale}
-          label="Count"
+          label={yLabel || "Count"}
         />
         <Bars
           data={bins}
@@ -82,14 +83,14 @@ const Histogram = ({ data, xAccessor, label }) => {
 }
 
 Histogram.propTypes = {
+  data: PropTypes.array,
   xAccessor: accessorPropsType,
-  yAccessor: accessorPropsType,
   xLabel: PropTypes.string,
   yLabel: PropTypes.string,
 }
 
 Histogram.defaultProps = {
   xAccessor: d => d.x,
-  yAccessor: d => d.y,
 }
+
 export default Histogram

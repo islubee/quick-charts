@@ -5,7 +5,7 @@ const Gradient = ({ id, colors, ...props }) => (
   <linearGradient id={id} gradientUnits="userSpaceOnUse" spreadMethod="pad" {...props}>
     {colors.map((color, i) => (
       <stop
-        key={i}
+        key={`${color}-${i}`}
         offset={`${i * 100 / (colors.length - 1)}%`}
         stopColor={color}
       />

@@ -1,5 +1,5 @@
-import {PropTypes} from 'prop-types'
-import { useEffect, useState, useRef } from "react"
+import PropTypes from 'prop-types'
+import { useEffect, useState, useRef, useId } from "react"
 import ResizeObserver from "resize-observer-polyfill"
 
 export const accessorPropsType = (
@@ -48,7 +48,7 @@ export const useChartDimensions = passedSettings => {
   const [height, changeHeight] = useState(0)
 
   useEffect(() => {
-    if (dimensions.width && dimensions.height) return [ref, dimensions]
+    if (dimensions.width && dimensions.height) return
 
     const element = ref.current
     const resizeObserver = new ResizeObserver(entries => {
@@ -75,8 +75,8 @@ export const useChartDimensions = passedSettings => {
   return [ref, newSettings]
 }
 
-let lastId = 0
-export const useUniqueId = (prefix="") => {
-  lastId++
-  return [prefix, lastId].join("-")
+// Use React's built-in useId (React 18+) for concurrent-safe unique IDs
+export const useUniqueId = (prefix = "") => {
+  const id = useId().replace(/:/g, '')
+  return `${prefix}-${id}`
 }

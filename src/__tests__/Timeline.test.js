@@ -15,7 +15,7 @@ describe('Timeline', () => {
         data={makeData()}
         xAccessor={(d) => d.date}
         yAccessor={(d) => d.temperature}
-        label="Temperature"
+        yLabel="Temperature"
       />
     )
     expect(container.firstChild).toBeInTheDocument()
@@ -66,10 +66,17 @@ describe('Timeline', () => {
     expect(container.querySelector('defs')).toBeInTheDocument()
   })
 
+  it('renders nothing for empty data', () => {
+    const { container } = render(
+      <Timeline data={[]} xAccessor={(d) => d.date} yAccessor={(d) => d.temperature} />
+    )
+    expect(container.firstChild).toBeNull()
+  })
+
   it('uses default accessors when none are supplied', () => {
     const defaultData = makeData().map((d, i) => ({ x: i, y: d.temperature }))
     expect(() =>
-      render(<Timeline data={defaultData} label="Test" />)
+      render(<Timeline data={defaultData} yLabel="Test" />)
     ).not.toThrow()
   })
 })

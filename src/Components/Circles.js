@@ -10,7 +10,7 @@ const Circles = ({ data, keyAccessor, xAccessor, yAccessor, radius }) => (
         key={keyAccessor(d, i)}
         cx={xAccessor(d, i)}
         cy={yAccessor(d, i)}
-        r={typeof radius == "function" ? radius(d) : radius}
+        r={typeof radius === "function" ? radius(d) : radius}
       />
     ))}
   </React.Fragment>

@@ -11,9 +11,12 @@ import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/uti
 const formatDate = d3.timeFormat("%-b %-d")
 const gradientColors = ["rgb(226, 222, 243)", "#f8f9fa"]
 
-const Timeline = ({ data, xAccessor, yAccessor, label }) => {
+const Timeline = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
   const [ref, dimensions] = useChartDimensions()
   const gradientId = useUniqueId("Timeline-gradient")
+
+  if (!data || data.length === 0) return null
+
   const xScale = d3.scaleTime()
     .domain(d3.extent(data, xAccessor))
     .range([0, dimensions.boundedWidth])
@@ -29,7 +32,7 @@ const Timeline = ({ data, xAccessor, yAccessor, label }) => {
 
   return (
     <div className="Timeline" ref={ref}>
-      <Chart dimensions={dimensions}>
+      <Chart dimensions={dimensions} label={yLabel || xLabel}>
         <defs>
           <Gradient
             id={gradientId}
@@ -42,11 +45,12 @@ const Timeline = ({ data, xAccessor, yAccessor, label }) => {
           dimension="x"
           scale={xScale}
           formatTick={formatDate}
+          label={xLabel}
         />
         <Axis
           dimension="y"
           scale={yScale}
-          label={label}
+          label={yLabel}
         />
         <Line
           type="area"
@@ -67,13 +71,16 @@ const Timeline = ({ data, xAccessor, yAccessor, label }) => {
 }
 
 Timeline.propTypes = {
-    xAccessor: accessorPropsType,
-    yAccessor: accessorPropsType,
-    label: PropTypes.string,
+  data: PropTypes.array,
+  xAccessor: accessorPropsType,
+  yAccessor: accessorPropsType,
+  xLabel: PropTypes.string,
+  yLabel: PropTypes.string,
 }
 
 Timeline.defaultProps = {
-    xAccessor: d => d.x,
-    yAccessor: d => d.y,
+  xAccessor: d => d.x,
+  yAccessor: d => d.y,
 }
+
 export default Timeline

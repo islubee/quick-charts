@@ -54,7 +54,7 @@ describe('callAccessor', () => {
 describe('useUniqueId', () => {
   it('returns a string containing the prefix', () => {
     const { result } = renderHook(() => useUniqueId('myprefix'))
-    expect(result.current).toMatch(/^myprefix-\d+$/)
+    expect(result.current).toMatch(/^myprefix-.+$/)
   })
 
   it('generates unique IDs across separate calls', () => {
@@ -63,8 +63,9 @@ describe('useUniqueId', () => {
     expect(r1.current).not.toBe(r2.current)
   })
 
-  it('uses an empty string prefix when none is provided', () => {
+  it('still produces a string when no prefix is provided', () => {
     const { result } = renderHook(() => useUniqueId())
-    expect(result.current).toMatch(/^-\d+$/)
+    expect(typeof result.current).toBe('string')
+    expect(result.current.length).toBeGreaterThan(0)
   })
 })
