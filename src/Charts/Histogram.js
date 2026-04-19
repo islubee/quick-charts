@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 import PropTypes from "prop-types"
 import * as d3 from "d3"
 
@@ -7,10 +7,13 @@ import Bars from "../Components/Bars"
 import Axis from "../Cartesian/Axis"
 import Gradient from "../Components/Gradient"
 import Legend from "../Components/Legend"
+import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils"
 
 const defaultGradientColors = ["#9980FA", "rgb(226, 222, 243)"]
 const DEFAULT_COLOR = '#9980FA'
+const fmt = d3.format(",")
+const fmtFixed = d3.format(",.2~f")
 
 const Histogram = ({
   data, xAccessor, xLabel, yLabel,
@@ -20,6 +23,8 @@ const Histogram = ({
 }) => {
   const gradientId = useUniqueId("Histogram-gradient")
   const [ref, dimensions] = useChartDimensions({ marginBottom: 77 })
+  const wrapperRef = useRef()
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, d: null })
 
   if (!data || data.length === 0) return null
 
@@ -52,6 +57,23 @@ const Histogram = ({
   const resolvedGradientColors = gradientColorsProp || defaultGradientColors
   const barStyle = color ? { fill: color } : { fill: `url(#${gradientId})` }
 
+  const tickFmt = formatXTick || fmtFixed
+
+  const getPos = e => {
+    const { left, top } = wrapperRef.current.getBoundingClientRect()
+    return { x: e.clientX - left, y: e.clientY - top }
+  }
+
+  const handleEnter = (d, i, e) => {
+    const { x, y } = getPos(e)
+    setTooltip({ visible: true, x, y, d })
+  }
+  const handleMove = (d, i, e) => {
+    const { x, y } = getPos(e)
+    setTooltip(t => ({ ...t, x, y }))
+  }
+  const handleLeave = () => setTooltip(t => ({ ...t, visible: false }))
+
   const legendItems = xLabel
     ? [{ color: color || DEFAULT_COLOR, label: xLabel }]
     : []
@@ -75,6 +97,9 @@ const Histogram = ({
           widthAccessor={widthAccessorScaled}
           heightAccessor={heightAccessorScaled}
           style={barStyle}
+          onMouseEnter={handleEnter}
+          onMouseMove={handleMove}
+          onMouseLeave={handleLeave}
         />
       </Chart>
     </div>
@@ -85,10 +110,18 @@ const Histogram = ({
     : null
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', position: 'relative' }}>
       {isLeading && legend}
       {chart}
       {!isLeading && legend}
+      <Tooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
+        {tooltip.d && (
+          <>
+            <div><strong>{xLabel || 'Range'}</strong>: {tickFmt(tooltip.d.x0)} – {tickFmt(tooltip.d.x1)}</div>
+            <div><strong>Count</strong>: {fmt(tooltip.d.length)}</div>
+          </>
+        )}
+      </Tooltip>
     </div>
   )
 }

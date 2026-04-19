@@ -48,12 +48,47 @@
 
 .Circles__circle {
     fill: #9980FA;
-    transition: all 0.3s ease-out;
+    transition: opacity 0.15s ease-out, r 0.15s ease-out;
+    cursor: pointer;
 }
 
 .Bars__rect {
     fill: #9980FA;
-    transition: all 0.3s ease-out;
+    transition: opacity 0.15s ease-out;
+    cursor: pointer;
+}
+
+.PieChart__slice {
+    transition: opacity 0.15s ease-out;
+    cursor: pointer;
+}
+
+/* Dim siblings of the hovered element */
+.BarChart:has(.Bars__rect:hover) .Bars__rect:not(:hover),
+.Histogram:has(.Bars__rect:hover) .Bars__rect:not(:hover) {
+    opacity: 0.35;
+}
+
+.ScatterPlot:has(.Circles__circle:hover) .Circles__circle:not(:hover) {
+    opacity: 0.35;
+}
+
+.PieChart:has(.PieChart__slice:hover) .PieChart__slice:not(:hover) {
+    opacity: 0.35;
+}
+
+/* Timeline hover elements */
+.Timeline__hover-line {
+    stroke: #aaa;
+    stroke-width: 1px;
+    stroke-dasharray: 4 3;
+    pointer-events: none;
+}
+
+.Timeline__hover-dot {
+    fill: #fff;
+    stroke-width: 2.5px;
+    pointer-events: none;
 }
 
 .domain,

@@ -1,13 +1,15 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 import PropTypes from "prop-types"
 import * as d3 from "d3"
 
 import Chart from "../Components/Chart"
 import Legend from "../Components/Legend"
+import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 
 const defaultMargin = { marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20 }
 const MIN_LABEL_ANGLE = 0.35
+const fmt = d3.format(",")
 
 const PieChart = ({
   data, valueAccessor, labelAccessor,
@@ -15,6 +17,8 @@ const PieChart = ({
   showLegend, legendPosition,
 }) => {
   const [ref, dimensions] = useChartDimensions(defaultMargin)
+  const wrapperRef = useRef()
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, datum: null, label: null })
 
   if (!data || data.length === 0) return null
 
@@ -50,6 +54,8 @@ const PieChart = ({
   const arcs = pieGenerator(data)
   const displayLabels = showLabels !== false && typeof labelAccessor === 'function'
 
+  const total = d3.sum(data, valueAccessor)
+
   const legendItems = typeof labelAccessor === 'function'
     ? data.map((d, i) => {
         const label = labelAccessor(d)
@@ -60,6 +66,21 @@ const PieChart = ({
   const resolvedPosition = legendPosition || 'bottom'
   const isHorizontal = resolvedPosition === 'left' || resolvedPosition === 'right'
   const isLeading = resolvedPosition === 'top' || resolvedPosition === 'left'
+
+  const getPos = e => {
+    const { left, top } = wrapperRef.current.getBoundingClientRect()
+    return { x: e.clientX - left, y: e.clientY - top }
+  }
+
+  const handleSliceEnter = (datum, label, e) => {
+    const { x, y } = getPos(e)
+    setTooltip({ visible: true, x, y, datum, label })
+  }
+  const handleSliceMove = (datum, label, e) => {
+    const { x, y } = getPos(e)
+    setTooltip(t => ({ ...t, x, y }))
+  }
+  const handleSliceLeave = () => setTooltip(t => ({ ...t, visible: false }))
 
   const chart = (
     <div className="PieChart" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
@@ -74,12 +95,15 @@ const PieChart = ({
                   className="PieChart__slice"
                   d={arcGenerator(arc)}
                   style={{ fill: colorScale(label) }}
+                  onMouseEnter={e => handleSliceEnter(data[i], label, e)}
+                  onMouseMove={e => handleSliceMove(data[i], label, e)}
+                  onMouseLeave={handleSliceLeave}
                 />
                 {displayLabels && sliceAngle >= MIN_LABEL_ANGLE && (
                   <text
                     className="PieChart__label"
                     transform={`translate(${labelArc.centroid(arc)})`}
-                    style={{ textAnchor: 'middle', dominantBaseline: 'middle' }}
+                    style={{ textAnchor: 'middle', dominantBaseline: 'middle', pointerEvents: 'none' }}
                   >
                     {label}
                   </text>
@@ -96,11 +120,22 @@ const PieChart = ({
     ? <Legend items={legendItems} position={resolvedPosition} />
     : null
 
+  const tooltipValue = tooltip.datum ? valueAccessor(tooltip.datum) : 0
+  const tooltipPct = total > 0 ? Math.round(tooltipValue / total * 100) : 0
+
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', position: 'relative' }}>
       {isLeading && legend}
       {chart}
       {!isLeading && legend}
+      <Tooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
+        {tooltip.datum && (
+          <>
+            <div><strong>{tooltip.label}</strong></div>
+            <div>{fmt(tooltipValue)} ({tooltipPct}%)</div>
+          </>
+        )}
+      </Tooltip>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 import PropTypes from "prop-types"
 import * as d3 from "d3"
 
@@ -6,9 +6,11 @@ import Chart from "../Components/Chart"
 import Bars from "../Components/Bars"
 import Axis from "../Cartesian/Axis"
 import Legend from "../Components/Legend"
+import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 
 const DEFAULT_COLOR = '#9980FA'
+const fmt = d3.format(",")
 
 const BarChart = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
@@ -16,6 +18,8 @@ const BarChart = ({
   showLegend, legendPosition,
 }) => {
   const [ref, dimensions] = useChartDimensions({ marginBottom: 77 })
+  const wrapperRef = useRef()
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, d: null })
 
   if (!data || data.length === 0) return null
 
@@ -34,6 +38,21 @@ const BarChart = ({
   const widthAccessorScaled = () => xScale.bandwidth()
   const heightAccessorScaled = d => dimensions.boundedHeight - yScale(yAccessor(d))
   const keyAccessor = (d, i) => i
+
+  const getPos = e => {
+    const { left, top } = wrapperRef.current.getBoundingClientRect()
+    return { x: e.clientX - left, y: e.clientY - top }
+  }
+
+  const handleEnter = (d, i, e) => {
+    const { x, y } = getPos(e)
+    setTooltip({ visible: true, x, y, d })
+  }
+  const handleMove = (d, i, e) => {
+    const { x, y } = getPos(e)
+    setTooltip(t => ({ ...t, x, y }))
+  }
+  const handleLeave = () => setTooltip(t => ({ ...t, visible: false }))
 
   const legendItems = yLabel
     ? [{ color: color || DEFAULT_COLOR, label: yLabel }]
@@ -55,6 +74,9 @@ const BarChart = ({
           widthAccessor={widthAccessorScaled}
           heightAccessor={heightAccessorScaled}
           style={color ? { fill: color } : undefined}
+          onMouseEnter={handleEnter}
+          onMouseMove={handleMove}
+          onMouseLeave={handleLeave}
         />
       </Chart>
     </div>
@@ -65,10 +87,18 @@ const BarChart = ({
     : null
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', position: 'relative' }}>
       {isLeading && legend}
       {chart}
       {!isLeading && legend}
+      <Tooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
+        {tooltip.d && (
+          <>
+            <div><strong>{xLabel || 'Category'}</strong>: {xAccessor(tooltip.d)}</div>
+            <div><strong>{yLabel || 'Value'}</strong>: {fmt(yAccessor(tooltip.d))}</div>
+          </>
+        )}
+      </Tooltip>
     </div>
   )
 }
