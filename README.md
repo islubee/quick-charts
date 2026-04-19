@@ -65,6 +65,8 @@ const data = [
 | `showDots` | `Boolean` | `false` | Overlay a circle at each data point |
 | `formatXTick` | `Function` | `d3.timeFormat("%-b %-d")` | Custom x-axis tick label formatter |
 | `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
+| `showLegend` | `Boolean` | `false` | Show a legend with the series color and y-axis label |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
 ---
 
@@ -107,6 +109,8 @@ const data = [
 | `radius` | `Number\|Function` | `5` | Circle radius in pixels, or a function `(d) => number` for variable sizing |
 | `formatXTick` | `Function` | `d3.format(",")` | Custom x-axis tick label formatter |
 | `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
+| `showLegend` | `Boolean` | `false` | Show a legend with the series color and y-axis label |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
 ---
 
@@ -148,6 +152,8 @@ const data = [
 | `thresholds` | `Number` | `9` | Target number of bins (D3 may adjust to nice values) |
 | `formatXTick` | `Function` | `d3.format(",")` | Custom x-axis tick label formatter |
 | `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
+| `showLegend` | `Boolean` | `false` | Show a legend with the series color and x-axis label |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
 ---
 
@@ -191,6 +197,10 @@ const data = [
 | `barPadding` | `Number` | `0.2` | Fractional gap between bars (0–1) |
 | `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
 | `yMin` | `Number` | `0` | Minimum value for the y-axis domain |
+| `showLegend` | `Boolean` | `false` | Show a legend with the bar color and y-axis label |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
+
+![Bar chart with legend](docs/barchart-legend.png)
 
 ---
 
@@ -239,6 +249,10 @@ const data = [
 | `innerRadius` | `Number` | `0` | Donut hole size as a fraction of the outer radius (0 = full pie, 0.5 = half donut) |
 | `padAngle` | `Number` | `0.02` | Gap between slices in radians |
 | `showLabels` | `Boolean` | `true` | Show label text inside each slice when `labelAccessor` is provided |
+| `showLegend` | `Boolean` | `false` | Show a legend listing each slice's color and label |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
+
+![Pie chart with legend](docs/piechart-legend.png)
 
 ---
 
@@ -330,6 +344,10 @@ All chart elements use predictable CSS class names you can override in your own 
 | `.Line--type-area` | Timeline area fill path |
 | `.Circles__circle` | ScatterPlot / Timeline data-point circles |
 | `.Bars__rect` | Histogram and BarChart bar rectangles |
+| `.Legend` | Legend container |
+| `.Legend__item` | Individual legend entry (swatch + label) |
+| `.Legend__swatch` | Colored square swatch |
+| `.Legend__label` | Label text next to the swatch |
 
 ## Contributing
 
