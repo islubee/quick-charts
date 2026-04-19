@@ -7,7 +7,10 @@ import Bars from "../Components/Bars"
 import Axis from "../Cartesian/Axis"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 
-const BarChart = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
+const BarChart = ({
+  data, xAccessor, yAccessor, xLabel, yLabel,
+  color, barPadding, formatYTick, yMin,
+}) => {
   const [ref, dimensions] = useChartDimensions({
     marginBottom: 77,
   })
@@ -17,10 +20,10 @@ const BarChart = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
   const xScale = d3.scaleBand()
     .domain(data.map(xAccessor))
     .range([0, dimensions.boundedWidth])
-    .padding(0.2)
+    .padding(barPadding !== undefined ? barPadding : 0.2)
 
   const yScale = d3.scaleLinear()
-    .domain([0, d3.max(data, yAccessor)])
+    .domain([yMin !== undefined ? yMin : 0, d3.max(data, yAccessor)])
     .range([dimensions.boundedHeight, 0])
     .nice()
 
@@ -31,7 +34,7 @@ const BarChart = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
   const keyAccessor = (d, i) => i
 
   return (
-    <div className="BarChart" ref={ref}>
+    <div className="BarChart" ref={ref} style={{ width: '100%', height: '100%' }}>
       <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
         <Axis
           dimension="x"
@@ -42,6 +45,7 @@ const BarChart = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
         <Axis
           dimension="y"
           scale={yScale}
+          formatTick={formatYTick}
           label={yLabel}
         />
         <Bars
@@ -51,6 +55,7 @@ const BarChart = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
           yAccessor={yAccessorScaled}
           widthAccessor={widthAccessorScaled}
           heightAccessor={heightAccessorScaled}
+          style={color ? { fill: color } : undefined}
         />
       </Chart>
     </div>
@@ -63,6 +68,14 @@ BarChart.propTypes = {
   yAccessor: accessorPropsType,
   xLabel: PropTypes.string,
   yLabel: PropTypes.string,
+  /** Fill color for the bars. */
+  color: PropTypes.string,
+  /** Fractional padding between bars (0–1). Default: 0.2. */
+  barPadding: PropTypes.number,
+  /** Custom formatter for y-axis tick labels. Defaults to d3.format(","). */
+  formatYTick: PropTypes.func,
+  /** Minimum value for the y-axis domain. Default: 0. */
+  yMin: PropTypes.number,
 }
 
 BarChart.defaultProps = {

@@ -2,7 +2,7 @@ import React from "react"
 import PropTypes from "prop-types"
 import { accessorPropsType } from "../Utils/utils";
 
-const Circles = ({ data, keyAccessor, xAccessor, yAccessor, radius }) => (
+const Circles = ({ data, keyAccessor, xAccessor, yAccessor, radius, color }) => (
   <React.Fragment>
     {data.map((d, i) => (
       <circle
@@ -11,6 +11,7 @@ const Circles = ({ data, keyAccessor, xAccessor, yAccessor, radius }) => (
         cx={xAccessor(d, i)}
         cy={yAccessor(d, i)}
         r={typeof radius === "function" ? radius(d) : radius}
+        style={color ? { fill: color } : undefined}
       />
     ))}
   </React.Fragment>
@@ -22,6 +23,8 @@ Circles.propTypes = {
   xAccessor: accessorPropsType,
   yAccessor: accessorPropsType,
   radius: accessorPropsType,
+  /** Fill color for each circle. */
+  color: PropTypes.string,
 }
 
 Circles.defaultProps = {
