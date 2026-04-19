@@ -3,7 +3,7 @@ import PropTypes from "prop-types"
 import * as d3 from 'd3'
 import { accessorPropsType, callAccessor } from "../Utils/utils";
 
-const Bars = ({ data, keyAccessor, xAccessor, yAccessor, widthAccessor, heightAccessor, ...props }) => (
+const Bars = ({ data, keyAccessor, xAccessor, yAccessor, widthAccessor, heightAccessor, onMouseEnter, onMouseLeave, onMouseMove, ...props }) => (
   <React.Fragment>
     {data.map((d, i) => (
       <rect {...props}
@@ -13,6 +13,9 @@ const Bars = ({ data, keyAccessor, xAccessor, yAccessor, widthAccessor, heightAc
         y={callAccessor(yAccessor, d, i)}
         width={d3.max([callAccessor(widthAccessor, d, i), 0])}
         height={d3.max([callAccessor(heightAccessor, d, i), 0])}
+        onMouseEnter={onMouseEnter ? e => onMouseEnter(d, i, e) : undefined}
+        onMouseLeave={onMouseLeave ? e => onMouseLeave(d, i, e) : undefined}
+        onMouseMove={onMouseMove ? e => onMouseMove(d, i, e) : undefined}
       />
     ))}
   </React.Fragment>

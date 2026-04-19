@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useRef, useState } from "react"
 import PropTypes from "prop-types"
 import * as d3 from "d3"
 
@@ -8,11 +8,14 @@ import Circles from "../Components/Circles"
 import Axis from "../Cartesian/Axis"
 import Gradient from "../Components/Gradient"
 import Legend from "../Components/Legend"
+import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils"
 
 const formatDate = d3.timeFormat("%-b %-d")
+const formatTooltipDate = d3.timeFormat("%-b %-d, %Y")
 const defaultGradientColors = ["rgb(226, 222, 243)", "#f8f9fa"]
 const DEFAULT_COLOR = '#9980FA'
+const fmt = d3.format(",")
 
 const Timeline = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
@@ -23,6 +26,9 @@ const Timeline = ({
 }) => {
   const [ref, dimensions] = useChartDimensions({ marginBottom: 77 })
   const gradientId = useUniqueId("Timeline-gradient")
+  const wrapperRef = useRef()
+  const [hovered, setHovered] = useState(null)
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 })
 
   if (!data || data.length === 0) return null
 
@@ -41,6 +47,35 @@ const Timeline = ({
   const xAccessorScaled = d => xScale(xAccessor(d))
   const yAccessorScaled = d => yScale(yAccessor(d))
   const y0AccessorScaled = yScale(yScale.domain()[0])
+
+  const bisect = d3.bisector(xAccessor).left
+
+  const handleMouseMove = e => {
+    const svgEl = e.currentTarget.ownerSVGElement
+    const svgBounds = svgEl.getBoundingClientRect()
+    const mouseX = e.clientX - svgBounds.left - dimensions.marginLeft
+
+    const date = xScale.invert(mouseX)
+    const idx = bisect(data, date, 1)
+    const d0 = data[idx - 1]
+    const d1 = data[idx]
+    const hoveredDatum = !d1 || (d0 && date - xAccessor(d0) < xAccessor(d1) - date)
+      ? idx - 1 : idx
+
+    setHovered(hoveredDatum)
+
+    const { left, top } = wrapperRef.current.getBoundingClientRect()
+    setTooltip({ visible: true, x: e.clientX - left, y: e.clientY - top })
+  }
+
+  const handleMouseLeave = () => {
+    setHovered(null)
+    setTooltip(t => ({ ...t, visible: false }))
+  }
+
+  const hoveredDatum = hovered !== null ? data[hovered] : null
+  const yFmt = formatYTick || fmt
+  const xFmt = formatXTick || formatTooltipDate
 
   const legendItems = yLabel
     ? [{ color: color || DEFAULT_COLOR, label: yLabel }]
@@ -84,6 +119,34 @@ const Timeline = ({
             color={color}
           />
         )}
+        {hoveredDatum && (
+          <>
+            <line
+              className="Timeline__hover-line"
+              x1={xAccessorScaled(hoveredDatum)}
+              x2={xAccessorScaled(hoveredDatum)}
+              y1={0}
+              y2={dimensions.boundedHeight}
+            />
+            <circle
+              className="Timeline__hover-dot"
+              cx={xAccessorScaled(hoveredDatum)}
+              cy={yAccessorScaled(hoveredDatum)}
+              r={5}
+              style={{ stroke: color || DEFAULT_COLOR }}
+            />
+          </>
+        )}
+        <rect
+          x={0}
+          y={0}
+          width={dimensions.boundedWidth}
+          height={dimensions.boundedHeight}
+          fill="none"
+          style={{ pointerEvents: 'all' }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        />
       </Chart>
     </div>
   )
@@ -93,10 +156,18 @@ const Timeline = ({
     : null
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', position: 'relative' }}>
       {isLeading && legend}
       {chart}
       {!isLeading && legend}
+      <Tooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
+        {hoveredDatum && (
+          <>
+            <div><strong>{xFmt(xAccessor(hoveredDatum))}</strong></div>
+            <div>{yLabel || 'Value'}: {yFmt(yAccessor(hoveredDatum))}</div>
+          </>
+        )}
+      </Tooltip>
     </div>
   )
 }
@@ -114,9 +185,7 @@ Timeline.propTypes = {
   showDots: PropTypes.bool,
   formatXTick: PropTypes.func,
   formatYTick: PropTypes.func,
-  /** Show a legend for the chart. Default: false. */
   showLegend: PropTypes.bool,
-  /** Position of the legend. One of 'top', 'bottom', 'left', 'right'. Default: 'bottom'. */
   legendPosition: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
 }
 
