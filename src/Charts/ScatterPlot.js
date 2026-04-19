@@ -5,22 +5,23 @@ import * as d3 from "d3"
 import Chart from "../Components/Chart"
 import Circles from "../Components/Circles"
 import Axis from "../Cartesian/Axis"
-import { useChartDimensions, accessorPropsType } from "../Utils/utils";
+import Legend from "../Components/Legend"
+import { useChartDimensions, accessorPropsType } from "../Utils/utils"
+
+const DEFAULT_COLOR = '#9980FA'
 
 const ScatterPlot = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
   color, radius, formatXTick, formatYTick,
+  showLegend, legendPosition,
 }) => {
-  const [ref, dimensions] = useChartDimensions({
-    marginBottom: 77,
-  })
+  const [ref, dimensions] = useChartDimensions({ marginBottom: 77 })
 
   if (!data || data.length === 0) return null
 
   const xExtent = d3.extent(data, xAccessor)
   const yExtent = d3.extent(data, yAccessor)
 
-  // Expand zero-width domains so a single unique value still renders visibly
   const xDomain = xExtent[0] === xExtent[1]
     ? [xExtent[0] - 1, xExtent[0] + 1]
     : xExtent
@@ -28,35 +29,25 @@ const ScatterPlot = ({
     ? [yExtent[0] - 1, yExtent[0] + 1]
     : yExtent
 
-  const xScale = d3.scaleLinear()
-    .domain(xDomain)
-    .range([0, dimensions.boundedWidth])
-    .nice()
-
-  const yScale = d3.scaleLinear()
-    .domain(yDomain)
-    .range([dimensions.boundedHeight, 0])
-    .nice()
+  const xScale = d3.scaleLinear().domain(xDomain).range([0, dimensions.boundedWidth]).nice()
+  const yScale = d3.scaleLinear().domain(yDomain).range([dimensions.boundedHeight, 0]).nice()
 
   const xAccessorScaled = d => xScale(xAccessor(d))
   const yAccessorScaled = d => yScale(yAccessor(d))
   const keyAccessor = (d, i) => i
 
-  return (
-    <div className="ScatterPlot" ref={ref} style={{ width: '100%', height: '100%' }}>
+  const legendItems = yLabel
+    ? [{ color: color || DEFAULT_COLOR, label: yLabel }]
+    : []
+  const resolvedPosition = legendPosition || 'bottom'
+  const isHorizontal = resolvedPosition === 'left' || resolvedPosition === 'right'
+  const isLeading = resolvedPosition === 'top' || resolvedPosition === 'left'
+
+  const chart = (
+    <div className="ScatterPlot" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
       <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
-        <Axis
-          dimension="x"
-          scale={xScale}
-          formatTick={formatXTick}
-          label={xLabel}
-        />
-        <Axis
-          dimension="y"
-          scale={yScale}
-          formatTick={formatYTick}
-          label={yLabel}
-        />
+        <Axis dimension="x" scale={xScale} formatTick={formatXTick} label={xLabel} />
+        <Axis dimension="y" scale={yScale} formatTick={formatYTick} label={yLabel} />
         <Circles
           data={data}
           keyAccessor={keyAccessor}
@@ -68,6 +59,18 @@ const ScatterPlot = ({
       </Chart>
     </div>
   )
+
+  const legend = showLegend && legendItems.length > 0
+    ? <Legend items={legendItems} position={resolvedPosition} />
+    : null
+
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+      {isLeading && legend}
+      {chart}
+      {!isLeading && legend}
+    </div>
+  )
 }
 
 ScatterPlot.propTypes = {
@@ -76,14 +79,12 @@ ScatterPlot.propTypes = {
   yAccessor: accessorPropsType,
   xLabel: PropTypes.string,
   yLabel: PropTypes.string,
-  /** Fill color for the data point circles. */
   color: PropTypes.string,
-  /** Radius of each circle in pixels, or a function (d) => number. Default: 5. */
   radius: PropTypes.oneOfType([PropTypes.number, PropTypes.func]),
-  /** Custom formatter for x-axis tick labels. Defaults to d3.format(","). */
   formatXTick: PropTypes.func,
-  /** Custom formatter for y-axis tick labels. Defaults to d3.format(","). */
   formatYTick: PropTypes.func,
+  showLegend: PropTypes.bool,
+  legendPosition: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
 }
 
 ScatterPlot.defaultProps = {

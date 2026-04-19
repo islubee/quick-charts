@@ -3,13 +3,16 @@ import PropTypes from "prop-types"
 import * as d3 from "d3"
 
 import Chart from "../Components/Chart"
+import Legend from "../Components/Legend"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 
 const defaultMargin = { marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20 }
+const MIN_LABEL_ANGLE = 0.35
 
 const PieChart = ({
   data, valueAccessor, labelAccessor,
   colors, innerRadius, padAngle, showLabels,
+  showLegend, legendPosition,
 }) => {
   const [ref, dimensions] = useChartDimensions(defaultMargin)
 
@@ -36,7 +39,6 @@ const PieChart = ({
     .innerRadius(resolvedInnerRadius)
     .outerRadius(outerRadius)
 
-  // Labels sit at 80% of the outer radius (or midpoint for donuts)
   const labelRadius = resolvedInnerRadius > 0
     ? (resolvedInnerRadius + outerRadius) / 2
     : outerRadius * 0.65
@@ -47,11 +49,20 @@ const PieChart = ({
 
   const arcs = pieGenerator(data)
   const displayLabels = showLabels !== false && typeof labelAccessor === 'function'
-  // Hide labels on slices narrower than ~20° to prevent overlap
-  const MIN_LABEL_ANGLE = 0.35
 
-  return (
-    <div className="PieChart" ref={ref} style={{ width: '100%', height: '100%' }}>
+  const legendItems = typeof labelAccessor === 'function'
+    ? data.map((d, i) => {
+        const label = labelAccessor(d)
+        return { color: colorScale(label !== undefined ? label : String(i)), label: String(label) }
+      })
+    : []
+
+  const resolvedPosition = legendPosition || 'bottom'
+  const isHorizontal = resolvedPosition === 'left' || resolvedPosition === 'right'
+  const isLeading = resolvedPosition === 'top' || resolvedPosition === 'left'
+
+  const chart = (
+    <div className="PieChart" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
       <Chart dimensions={dimensions} label="Pie chart">
         <g transform={`translate(${cx}, ${cy})`}>
           {arcs.map((arc, i) => {
@@ -80,22 +91,32 @@ const PieChart = ({
       </Chart>
     </div>
   )
+
+  const legend = showLegend && legendItems.length > 0
+    ? <Legend items={legendItems} position={resolvedPosition} />
+    : null
+
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column' }}>
+      {isLeading && legend}
+      {chart}
+      {!isLeading && legend}
+    </div>
+  )
 }
 
 PieChart.propTypes = {
   data: PropTypes.array,
-  /** Returns a numeric value from each datum — determines slice size. */
   valueAccessor: accessorPropsType,
-  /** Returns a label string from each datum — used for color mapping and optional text. */
   labelAccessor: accessorPropsType,
-  /** Array of color strings for the slices. Defaults to d3.schemeSet2. */
   colors: PropTypes.arrayOf(PropTypes.string),
-  /** Donut hole size as a fraction of the outer radius (0 = full pie, 0.5 = half donut). Default: 0. */
   innerRadius: PropTypes.number,
-  /** Gap between slices in radians. Default: 0.02. */
   padAngle: PropTypes.number,
-  /** Show label text inside each slice. Default: true when labelAccessor is provided. */
   showLabels: PropTypes.bool,
+  /** Show a legend listing each slice's color and label. Default: false. */
+  showLegend: PropTypes.bool,
+  /** Position of the legend. One of 'top', 'bottom', 'left', 'right'. Default: 'bottom'. */
+  legendPosition: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
 }
 
 PieChart.defaultProps = {
