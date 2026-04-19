@@ -13,6 +13,7 @@ A lightweight React + D3 chart library for building responsive, accessible data 
 - **ScatterPlot** — correlation scatter chart
 - **Histogram** — frequency distribution chart
 - **BarChart** — categorical bar chart
+- **PieChart** — pie / donut chart for part-to-whole comparisons
 
 ## Installation
 
@@ -190,6 +191,54 @@ const data = [
 | `barPadding` | `Number` | `0.2` | Fractional gap between bars (0–1) |
 | `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
 | `yMin` | `Number` | `0` | Minimum value for the y-axis domain |
+
+---
+
+### PieChart
+
+Renders a pie or donut chart for part-to-whole comparisons. Labels are automatically hidden on slices narrower than ~20° to prevent overlap.
+
+```jsx
+import { PieChart } from 'quick-charts'
+
+const data = [
+  { label: 'Apples',   value: 32 },
+  { label: 'Bananas',  value: 21 },
+  { label: 'Cherries', value: 18 },
+  { label: 'Dates',    value: 14 },
+]
+
+<div style={{ width: 420, height: 420 }}>
+  <PieChart
+    data={data}
+    valueAccessor={d => d.value}
+    labelAccessor={d => d.label}
+  />
+</div>
+
+{/* Donut variant */}
+<div style={{ width: 420, height: 420 }}>
+  <PieChart
+    data={data}
+    valueAccessor={d => d.value}
+    labelAccessor={d => d.label}
+    innerRadius={0.55}
+    colors={['#e74c3c', '#3498db', '#2ecc71', '#f39c12']}
+  />
+</div>
+```
+
+![Pie chart showing fruit distribution](docs/piechart.png)
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `data` | `Array` | — | Array of data objects |
+| `valueAccessor` | `Function` | `d => d.value` | Returns a numeric value from each datum — determines slice size |
+| `labelAccessor` | `Function` | `d => d.label` | Returns a label string from each datum — used for color mapping and slice text |
+| `colors` | `String[]` | `d3.schemeSet2` | Array of color strings for the slices |
+| `innerRadius` | `Number` | `0` | Donut hole size as a fraction of the outer radius (0 = full pie, 0.5 = half donut) |
+| `padAngle` | `Number` | `0.02` | Gap between slices in radians |
+| `showLabels` | `Boolean` | `true` | Show label text inside each slice when `labelAccessor` is provided |
 
 ---
 
