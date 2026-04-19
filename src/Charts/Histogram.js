@@ -8,9 +8,13 @@ import Axis from "../Cartesian/Axis"
 import Gradient from "../Components/Gradient"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils";
 
-const gradientColors = ["#9980FA", "rgb(226, 222, 243)"]
+const defaultGradientColors = ["#9980FA", "rgb(226, 222, 243)"]
 
-const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
+const Histogram = ({
+  data, xAccessor, xLabel, yLabel,
+  color, gradientColors: gradientColorsProp, thresholds,
+  formatXTick, formatYTick,
+}) => {
   const gradientId = useUniqueId("Histogram-gradient")
   const [ref, dimensions] = useChartDimensions({
     marginBottom: 77,
@@ -18,7 +22,7 @@ const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
 
   if (!data || data.length === 0) return null
 
-  const numberOfThresholds = 9
+  const numberOfThresholds = thresholds || 9
 
   const xScale = d3.scaleLinear()
     .domain(d3.extent(data, xAccessor))
@@ -47,13 +51,18 @@ const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
   const heightAccessorScaled = d => dimensions.boundedHeight - yScale(yAccessor(d))
   const keyAccessor = (d, i) => i
 
+  const resolvedGradientColors = gradientColorsProp || defaultGradientColors
+  const barStyle = color
+    ? { fill: color }
+    : { fill: `url(#${gradientId})` }
+
   return (
-    <div className="Histogram" ref={ref}>
+    <div className="Histogram" ref={ref} style={{ width: '100%', height: '100%' }}>
       <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
         <defs>
           <Gradient
             id={gradientId}
-            colors={gradientColors}
+            colors={resolvedGradientColors}
             x2="0"
             y2="100%"
           />
@@ -61,11 +70,13 @@ const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
         <Axis
           dimension="x"
           scale={xScale}
+          formatTick={formatXTick}
           label={xLabel}
         />
         <Axis
           dimension="y"
           scale={yScale}
+          formatTick={formatYTick}
           label={yLabel || "Count"}
         />
         <Bars
@@ -75,7 +86,7 @@ const Histogram = ({ data, xAccessor, xLabel, yLabel }) => {
           yAccessor={yAccessorScaled}
           widthAccessor={widthAccessorScaled}
           heightAccessor={heightAccessorScaled}
-          style={{fill: `url(#${gradientId})`}}
+          style={barStyle}
         />
       </Chart>
     </div>
@@ -87,6 +98,16 @@ Histogram.propTypes = {
   xAccessor: accessorPropsType,
   xLabel: PropTypes.string,
   yLabel: PropTypes.string,
+  /** Solid fill color for bars. When set, overrides gradientColors. */
+  color: PropTypes.string,
+  /** Two-element array [topColor, bottomColor] for the bar gradient fill. */
+  gradientColors: PropTypes.arrayOf(PropTypes.string),
+  /** Number of histogram bins. Default: 9. */
+  thresholds: PropTypes.number,
+  /** Custom formatter for x-axis tick labels. Defaults to d3.format(","). */
+  formatXTick: PropTypes.func,
+  /** Custom formatter for y-axis tick labels. Defaults to d3.format(","). */
+  formatYTick: PropTypes.func,
 }
 
 Histogram.defaultProps = {

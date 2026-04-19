@@ -7,7 +7,10 @@ import Circles from "../Components/Circles"
 import Axis from "../Cartesian/Axis"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils";
 
-const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
+const ScatterPlot = ({
+  data, xAccessor, yAccessor, xLabel, yLabel,
+  color, radius, formatXTick, formatYTick,
+}) => {
   const [ref, dimensions] = useChartDimensions({
     marginBottom: 77,
   })
@@ -40,16 +43,18 @@ const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
   const keyAccessor = (d, i) => i
 
   return (
-    <div className="ScatterPlot" ref={ref}>
+    <div className="ScatterPlot" ref={ref} style={{ width: '100%', height: '100%' }}>
       <Chart dimensions={dimensions} label={[xLabel, yLabel].filter(Boolean).join(' / ')}>
         <Axis
           dimension="x"
           scale={xScale}
+          formatTick={formatXTick}
           label={xLabel}
         />
         <Axis
           dimension="y"
           scale={yScale}
+          formatTick={formatYTick}
           label={yLabel}
         />
         <Circles
@@ -57,6 +62,8 @@ const ScatterPlot = ({ data, xAccessor, yAccessor, xLabel, yLabel }) => {
           keyAccessor={keyAccessor}
           xAccessor={xAccessorScaled}
           yAccessor={yAccessorScaled}
+          radius={radius}
+          color={color}
         />
       </Chart>
     </div>
@@ -69,6 +76,14 @@ ScatterPlot.propTypes = {
   yAccessor: accessorPropsType,
   xLabel: PropTypes.string,
   yLabel: PropTypes.string,
+  /** Fill color for the data point circles. */
+  color: PropTypes.string,
+  /** Radius of each circle in pixels, or a function (d) => number. Default: 5. */
+  radius: PropTypes.oneOfType([PropTypes.number, PropTypes.func]),
+  /** Custom formatter for x-axis tick labels. Defaults to d3.format(","). */
+  formatXTick: PropTypes.func,
+  /** Custom formatter for y-axis tick labels. Defaults to d3.format(","). */
+  formatYTick: PropTypes.func,
 }
 
 ScatterPlot.defaultProps = {
