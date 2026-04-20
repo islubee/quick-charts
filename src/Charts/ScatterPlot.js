@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleLinear } from 'd3-scale'
+import { extent } from 'd3-array'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import Circles from "../Components/Circles"
@@ -11,7 +13,7 @@ import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 import { useTooltip } from "../Utils/useTooltip"
 
 const DEFAULT_COLOR = '#9980FA'
-const fmt = d3.format(",")
+const fmt = format(",")
 
 const ScatterPlot = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
@@ -22,15 +24,15 @@ const ScatterPlot = ({
   const { wrapperRef, tooltip, showTooltip, moveTooltip, hideTooltip } = useTooltip()
 
   const xScale = useMemo(() => {
-    const extent = d3.extent(data, xAccessor)
-    const domain = extent[0] === extent[1] ? [extent[0] - 1, extent[0] + 1] : extent
-    return d3.scaleLinear().domain(domain).range([0, dimensions.boundedWidth]).nice()
+    const ext = extent(data, xAccessor)
+    const domain = ext[0] === ext[1] ? [ext[0] - 1, ext[0] + 1] : ext
+    return scaleLinear().domain(domain).range([0, dimensions.boundedWidth]).nice()
   }, [data, xAccessor, dimensions.boundedWidth])
 
   const yScale = useMemo(() => {
-    const extent = d3.extent(data, yAccessor)
-    const domain = extent[0] === extent[1] ? [extent[0] - 1, extent[0] + 1] : extent
-    return d3.scaleLinear().domain(domain).range([dimensions.boundedHeight, 0]).nice()
+    const ext = extent(data, yAccessor)
+    const domain = ext[0] === ext[1] ? [ext[0] - 1, ext[0] + 1] : ext
+    return scaleLinear().domain(domain).range([dimensions.boundedHeight, 0]).nice()
   }, [data, yAccessor, dimensions.boundedHeight])
 
   const legendItems = useMemo(() =>
