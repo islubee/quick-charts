@@ -13,6 +13,7 @@ A lightweight React + D3 chart library for building responsive, accessible data 
 - **ScatterPlot** — correlation scatter chart
 - **Histogram** — frequency distribution chart
 - **BarChart** — categorical bar chart
+- **StackedBarChart** — stacked bar chart for part-to-whole across categories
 - **PieChart** — pie / donut chart for part-to-whole comparisons
 
 ## Installation
@@ -201,6 +202,46 @@ const data = [
 | `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
 ![Bar chart with legend](docs/barchart-legend.png)
+
+---
+
+### StackedBarChart
+
+Renders a stacked vertical bar chart for comparing part-to-whole relationships across categories. Pass a `keys` array and each key must be a numeric property on every datum.
+
+```jsx
+import { StackedBarChart } from 'quick-charts'
+
+const data = [
+  { month: 'Jan', apples: 30, oranges: 20, bananas: 15 },
+  { month: 'Feb', apples: 25, oranges: 30, bananas: 10 },
+  { month: 'Mar', apples: 40, oranges: 15, bananas: 20 },
+  { month: 'Apr', apples: 35, oranges: 25, bananas: 18 },
+]
+
+<div style={{ width: 560, height: 340 }}>
+  <StackedBarChart
+    data={data}
+    xAccessor={d => d.month}
+    keys={['apples', 'oranges', 'bananas']}
+    xLabel="Month"
+    yLabel="Units"
+  />
+</div>
+```
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `data` | `Array` | — | Array of data objects |
+| `xAccessor` | `Function` | `d => d.x` | Returns a category string from each datum |
+| `keys` | `String[]` | — | **Required.** Series keys to stack — each must be a numeric property on every datum |
+| `colors` | `String[]` | `d3.schemeSet2` | One color per key |
+| `xLabel` | `String` | — | Label for the x-axis |
+| `yLabel` | `String` | — | Label for the y-axis |
+| `barPadding` | `Number` | `0.2` | Fractional gap between bar groups (0–1) |
+| `formatYTick` | `Function` | `d3.format(",")` | Custom y-axis tick label formatter |
+| `showLegend` | `Boolean` | `true` | Show a legend with one entry per key |
+| `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
 ---
 
