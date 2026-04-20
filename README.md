@@ -243,6 +243,8 @@ const data = [
 | `showLegend` | `Boolean` | `true` | Show a legend with one entry per key |
 | `legendPosition` | `'top'\|'bottom'\|'left'\|'right'` | `'bottom'` | Position of the legend relative to the chart |
 
+![Stacked bar chart showing monthly fruit units](docs/stackedbarchart.png)
+
 ---
 
 ### PieChart
@@ -301,7 +303,7 @@ const data = [
 
 ```jsx
 import React from 'react'
-import { Timeline, ScatterPlot, Histogram, BarChart } from 'quick-charts'
+import { Timeline, ScatterPlot, Histogram, BarChart, StackedBarChart } from 'quick-charts'
 
 const timelineData = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(2024, 2, i + 1),
@@ -317,6 +319,15 @@ const barData = [
   { month: 'Jan', sales: 42 },
   { month: 'Jun', sales: 95 },
   // ...
+]
+
+const stackedData = [
+  { month: 'Jan', apples: 30, oranges: 20, bananas: 15 },
+  { month: 'Feb', apples: 25, oranges: 30, bananas: 10 },
+  { month: 'Mar', apples: 40, oranges: 15, bananas: 20 },
+  { month: 'Apr', apples: 35, oranges: 25, bananas: 18 },
+  { month: 'May', apples: 50, oranges: 35, bananas: 22 },
+  { month: 'Jun', apples: 45, oranges: 40, bananas: 28 },
 ]
 
 const App = () => (
@@ -353,6 +364,15 @@ const App = () => (
         yAccessor={d => d.sales}
         xLabel="Month"
         yLabel="Sales"
+      />
+    </div>
+    <div style={{ width: 560, height: 340 }}>
+      <StackedBarChart
+        data={stackedData}
+        xAccessor={d => d.month}
+        keys={['apples', 'oranges', 'bananas']}
+        xLabel="Month"
+        yLabel="Units"
       />
     </div>
   </div>
