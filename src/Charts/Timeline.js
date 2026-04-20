@@ -1,6 +1,9 @@
 import React, { useCallback, useMemo, useState } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleTime, scaleLinear } from 'd3-scale'
+import { extent, bisector } from 'd3-array'
+import { timeFormat } from 'd3-time-format'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import Line from "../Components/Line"
@@ -12,11 +15,11 @@ import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils"
 import { useTooltip } from "../Utils/useTooltip"
 
-const formatDate = d3.timeFormat("%-b %-d")
-const formatTooltipDate = d3.timeFormat("%-b %-d, %Y")
+const formatDate = timeFormat("%-b %-d")
+const formatTooltipDate = timeFormat("%-b %-d, %Y")
 const DEFAULT_GRADIENT = ["rgb(226, 222, 243)", "#f8f9fa"]
 const DEFAULT_COLOR = '#9980FA'
-const fmt = d3.format(",")
+const fmt = format(",")
 
 const Timeline = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
@@ -34,15 +37,15 @@ const Timeline = ({
     || (color ? [`${color}55`, "rgba(255,255,255,0)"] : DEFAULT_GRADIENT)
 
   const xScale = useMemo(() =>
-    d3.scaleTime()
-      .domain(d3.extent(data, xAccessor))
+    scaleTime()
+      .domain(extent(data, xAccessor))
       .range([0, dimensions.boundedWidth]),
     [data, xAccessor, dimensions.boundedWidth]
   )
 
   const yScale = useMemo(() =>
-    d3.scaleLinear()
-      .domain(d3.extent(data, yAccessor))
+    scaleLinear()
+      .domain(extent(data, yAccessor))
       .range([dimensions.boundedHeight, 0])
       .nice(),
     [data, yAccessor, dimensions.boundedHeight]
@@ -53,20 +56,20 @@ const Timeline = ({
     [yLabel, color]
   )
 
-  const bisect = useMemo(() => d3.bisector(xAccessor).left, [xAccessor])
+  const dateBisector = useMemo(() => bisector(xAccessor).left, [xAccessor])
 
   const handleMouseMove = useCallback(e => {
     const svgEl = e.currentTarget.ownerSVGElement
     const { left: svgLeft } = svgEl.getBoundingClientRect()
     const mouseX = e.clientX - svgLeft - dimensions.marginLeft
     const date = xScale.invert(mouseX)
-    const idx = bisect(data, date, 1)
+    const idx = dateBisector(data, date, 1)
     const d0 = data[idx - 1]
     const d1 = data[idx]
     const i = !d1 || (d0 && date - xAccessor(d0) < xAccessor(d1) - date) ? idx - 1 : idx
     setHoveredIndex(i)
     showTooltip(e, { datum: data[i] })
-  }, [data, xAccessor, xScale, bisect, dimensions.marginLeft, showTooltip])
+  }, [data, xAccessor, xScale, dateBisector, dimensions.marginLeft, showTooltip])
 
   const handleMouseLeave = useCallback(() => {
     setHoveredIndex(null)

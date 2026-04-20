@@ -1,10 +1,12 @@
 import React from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { line, area, curveMonotoneX } from 'd3-shape'
 import { accessorPropsType } from "../Utils/utils";
 
+const generators = { line, area }
+
 const Line = ({ type, data, xAccessor, yAccessor, y0Accessor, interpolation, ...props }) => {
-  const lineGenerator = d3[type]()
+  const lineGenerator = generators[type]()
     .x(xAccessor)
     .y(yAccessor)
     .curve(interpolation)
@@ -35,7 +37,7 @@ Line.propTypes = {
 Line.defaultProps = {
   type: "line",
   y0Accessor: 0,
-  interpolation: d3.curveMonotoneX,
+  interpolation: curveMonotoneX,
 }
 
 export default Line

@@ -1,6 +1,10 @@
 import React, { useCallback, useMemo } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleOrdinal } from 'd3-scale'
+import { arc, pie } from 'd3-shape'
+import { sum } from 'd3-array'
+import { schemeSet2 } from 'd3-scale-chromatic'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import ChartLayout from "../Components/ChartLayout"
@@ -10,7 +14,7 @@ import { useTooltip } from "../Utils/useTooltip"
 
 const DEFAULT_MARGIN = { marginTop: 20, marginRight: 20, marginBottom: 20, marginLeft: 20 }
 const MIN_LABEL_ANGLE = 0.35
-const fmt = d3.format(",")
+const fmt = format(",")
 
 const PieChart = ({
   data, valueAccessor, labelAccessor,
@@ -21,7 +25,7 @@ const PieChart = ({
   const { wrapperRef, tooltip, showTooltip, moveTooltip, hideTooltip } = useTooltip()
 
   const colorScale = useMemo(() =>
-    d3.scaleOrdinal(Array.isArray(colors) ? colors : d3.schemeSet2),
+    scaleOrdinal(Array.isArray(colors) ? colors : schemeSet2),
     [colors]
   )
 
@@ -34,7 +38,7 @@ const PieChart = ({
     : 0
 
   const arcGenerator = useMemo(() =>
-    d3.arc().innerRadius(resolvedInnerRadius).outerRadius(outerRadius),
+    arc().innerRadius(resolvedInnerRadius).outerRadius(outerRadius),
     [resolvedInnerRadius, outerRadius]
   )
 
@@ -42,11 +46,11 @@ const PieChart = ({
     const r = resolvedInnerRadius > 0
       ? (resolvedInnerRadius + outerRadius) / 2
       : outerRadius * 0.65
-    return d3.arc().innerRadius(r).outerRadius(r)
+    return arc().innerRadius(r).outerRadius(r)
   }, [resolvedInnerRadius, outerRadius])
 
   const arcs = useMemo(() =>
-    data ? d3.pie()
+    data ? pie()
       .value(valueAccessor)
       .padAngle(padAngle ?? 0.02)
       .sort(null)(data)
@@ -55,7 +59,7 @@ const PieChart = ({
   )
 
   const total = useMemo(() =>
-    data ? d3.sum(data, valueAccessor) : 0,
+    data ? sum(data, valueAccessor) : 0,
     [data, valueAccessor]
   )
 
@@ -95,22 +99,22 @@ const PieChart = ({
       <div className="PieChart" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
         <Chart dimensions={dimensions} label="Pie chart">
           <g transform={`translate(${cx}, ${cy})`}>
-            {arcs.map((arc, i) => {
+            {arcs.map((a, i) => {
               const label = labelAccessor ? labelAccessor(data[i]) : String(i)
               return (
                 <g key={i} className="PieChart__slice-group">
                   <path
                     className="PieChart__slice"
-                    d={arcGenerator(arc)}
+                    d={arcGenerator(a)}
                     style={{ fill: colorScale(label) }}
                     onMouseEnter={e => handleSliceEnter(data[i], label, e)}
                     onMouseMove={e => handleSliceMove(data[i], label, e)}
                     onMouseLeave={hideTooltip}
                   />
-                  {displayLabels && (arc.endAngle - arc.startAngle) >= MIN_LABEL_ANGLE && (
+                  {displayLabels && (a.endAngle - a.startAngle) >= MIN_LABEL_ANGLE && (
                     <text
                       className="PieChart__label"
-                      transform={`translate(${labelArc.centroid(arc)})`}
+                      transform={`translate(${labelArc.centroid(a)})`}
                       style={{ textAnchor: 'middle', dominantBaseline: 'middle', pointerEvents: 'none' }}
                     >
                       {label}

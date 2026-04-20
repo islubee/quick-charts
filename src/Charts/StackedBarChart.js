@@ -1,6 +1,10 @@
 import React, { useCallback, useMemo } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleOrdinal, scaleBand, scaleLinear } from 'd3-scale'
+import { stack } from 'd3-shape'
+import { max } from 'd3-array'
+import { schemeSet2 } from 'd3-scale-chromatic'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import Axis from "../Cartesian/Axis"
@@ -9,7 +13,7 @@ import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 import { useTooltip } from "../Utils/useTooltip"
 
-const fmt = d3.format(",")
+const fmt = format(",")
 
 const StackedBarChart = ({
   data, xAccessor, keys, colors,
@@ -20,17 +24,17 @@ const StackedBarChart = ({
   const { wrapperRef, tooltip, showTooltip, moveTooltip, hideTooltip } = useTooltip()
 
   const colorScale = useMemo(() =>
-    d3.scaleOrdinal(Array.isArray(colors) ? colors : d3.schemeSet2).domain(keys),
+    scaleOrdinal(Array.isArray(colors) ? colors : schemeSet2).domain(keys),
     [colors, keys]
   )
 
   const series = useMemo(() =>
-    data && keys && keys.length ? d3.stack().keys(keys)(data) : [],
+    data && keys && keys.length ? stack().keys(keys)(data) : [],
     [data, keys]
   )
 
   const xScale = useMemo(() =>
-    d3.scaleBand()
+    scaleBand()
       .domain(data ? data.map(xAccessor) : [])
       .range([0, dimensions.boundedWidth])
       .padding(barPadding ?? 0.2),
@@ -38,8 +42,8 @@ const StackedBarChart = ({
   )
 
   const yScale = useMemo(() =>
-    d3.scaleLinear()
-      .domain([0, d3.max(series, s => d3.max(s, d => d[1])) || 0])
+    scaleLinear()
+      .domain([0, max(series, s => max(s, d => d[1])) || 0])
       .range([dimensions.boundedHeight, 0])
       .nice(),
     [series, dimensions.boundedHeight]

@@ -1,6 +1,6 @@
 import React from "react"
 import PropTypes from "prop-types"
-import * as d3 from 'd3'
+import { format } from 'd3-format'
 import { useDimensionsContext } from "../Components/Chart";
 
 const axisComponentsByDimension = {
@@ -31,7 +31,7 @@ Axis.propTypes = {
 Axis.defaultProps = {
   dimension: "x",
   scale: null,
-  formatTick: d3.format(","),
+  formatTick: format(","),
 }
 
 export default Axis

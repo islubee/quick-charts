@@ -1,6 +1,6 @@
 import React from "react"
 import PropTypes from "prop-types"
-import * as d3 from 'd3'
+import { max } from 'd3-array'
 import { accessorPropsType, callAccessor } from "../Utils/utils";
 
 const Bars = ({ data, keyAccessor, xAccessor, yAccessor, widthAccessor, heightAccessor, onMouseEnter, onMouseLeave, onMouseMove, ...props }) => (
@@ -11,8 +11,8 @@ const Bars = ({ data, keyAccessor, xAccessor, yAccessor, widthAccessor, heightAc
         key={keyAccessor(d, i)}
         x={callAccessor(xAccessor, d, i)}
         y={callAccessor(yAccessor, d, i)}
-        width={d3.max([callAccessor(widthAccessor, d, i), 0])}
-        height={d3.max([callAccessor(heightAccessor, d, i), 0])}
+        width={max([callAccessor(widthAccessor, d, i), 0])}
+        height={max([callAccessor(heightAccessor, d, i), 0])}
         onMouseEnter={onMouseEnter ? e => onMouseEnter(d, i, e) : undefined}
         onMouseLeave={onMouseLeave ? e => onMouseLeave(d, i, e) : undefined}
         onMouseMove={onMouseMove ? e => onMouseMove(d, i, e) : undefined}

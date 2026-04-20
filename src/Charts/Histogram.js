@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleLinear } from 'd3-scale'
+import { extent, max, histogram } from 'd3-array'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import Bars from "../Components/Bars"
@@ -13,8 +15,8 @@ import { useTooltip } from "../Utils/useTooltip"
 
 const DEFAULT_GRADIENT = ["#9980FA", "rgb(226, 222, 243)"]
 const DEFAULT_COLOR = '#9980FA'
-const fmt = d3.format(",")
-const fmtFixed = d3.format(",.2~f")
+const fmt = format(",")
+const fmtFixed = format(",.2~f")
 const BAR_PADDING = 2
 
 const Histogram = ({
@@ -30,15 +32,15 @@ const Histogram = ({
   const numberOfThresholds = thresholds || 9
 
   const xScale = useMemo(() =>
-    d3.scaleLinear()
-      .domain(d3.extent(data, xAccessor))
+    scaleLinear()
+      .domain(extent(data, xAccessor))
       .range([0, dimensions.boundedWidth])
       .nice(numberOfThresholds),
     [data, xAccessor, dimensions.boundedWidth, numberOfThresholds]
   )
 
   const bins = useMemo(() =>
-    d3.histogram()
+    histogram()
       .domain(xScale.domain())
       .value(xAccessor)
       .thresholds(xScale.ticks(numberOfThresholds))(data),
@@ -46,8 +48,8 @@ const Histogram = ({
   )
 
   const yScale = useMemo(() =>
-    d3.scaleLinear()
-      .domain([0, d3.max(bins, d => d.length) || 0])
+    scaleLinear()
+      .domain([0, max(bins, d => d.length) || 0])
       .range([dimensions.boundedHeight, 0])
       .nice(),
     [bins, dimensions.boundedHeight]

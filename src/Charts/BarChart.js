@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo } from "react"
 import PropTypes from "prop-types"
-import * as d3 from "d3"
+import { scaleBand, scaleLinear } from 'd3-scale'
+import { max } from 'd3-array'
+import { format } from 'd3-format'
 
 import Chart from "../Components/Chart"
 import Bars from "../Components/Bars"
@@ -11,7 +13,7 @@ import { useChartDimensions, accessorPropsType } from "../Utils/utils"
 import { useTooltip } from "../Utils/useTooltip"
 
 const DEFAULT_COLOR = '#9980FA'
-const fmt = d3.format(",")
+const fmt = format(",")
 
 const BarChart = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
@@ -22,7 +24,7 @@ const BarChart = ({
   const { wrapperRef, tooltip, showTooltip, moveTooltip, hideTooltip } = useTooltip()
 
   const xScale = useMemo(() =>
-    d3.scaleBand()
+    scaleBand()
       .domain(data ? data.map(xAccessor) : [])
       .range([0, dimensions.boundedWidth])
       .padding(barPadding ?? 0.2),
@@ -30,8 +32,8 @@ const BarChart = ({
   )
 
   const yScale = useMemo(() =>
-    d3.scaleLinear()
-      .domain([yMin ?? 0, d3.max(data, yAccessor) || 0])
+    scaleLinear()
+      .domain([yMin ?? 0, max(data, yAccessor) || 0])
       .range([dimensions.boundedHeight, 0])
       .nice(),
     [data, yAccessor, dimensions.boundedHeight, yMin]
