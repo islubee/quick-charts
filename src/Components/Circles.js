@@ -26,8 +26,10 @@ Circles.propTypes = {
   xAccessor: accessorPropsType,
   yAccessor: accessorPropsType,
   radius: accessorPropsType,
-  /** Fill color for each circle. */
   color: PropTypes.string,
+  onMouseEnter: PropTypes.func,
+  onMouseLeave: PropTypes.func,
+  onMouseMove: PropTypes.func,
 }
 
 Circles.defaultProps = {

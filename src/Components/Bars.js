@@ -28,6 +28,9 @@ Bars.propTypes = {
   yAccessor: accessorPropsType,
   widthAccessor: accessorPropsType,
   heightAccessor: accessorPropsType,
+  onMouseEnter: PropTypes.func,
+  onMouseLeave: PropTypes.func,
+  onMouseMove: PropTypes.func,
 }
 
 Bars.defaultProps = {

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import PropTypes from "prop-types"
 import * as d3 from "d3"
 
@@ -7,168 +7,156 @@ import Line from "../Components/Line"
 import Circles from "../Components/Circles"
 import Axis from "../Cartesian/Axis"
 import Gradient from "../Components/Gradient"
-import Legend from "../Components/Legend"
+import ChartLayout from "../Components/ChartLayout"
 import Tooltip from "../Components/Tooltip"
 import { useChartDimensions, accessorPropsType, useUniqueId } from "../Utils/utils"
+import { useTooltip } from "../Utils/useTooltip"
 
 const formatDate = d3.timeFormat("%-b %-d")
 const formatTooltipDate = d3.timeFormat("%-b %-d, %Y")
-const defaultGradientColors = ["rgb(226, 222, 243)", "#f8f9fa"]
+const DEFAULT_GRADIENT = ["rgb(226, 222, 243)", "#f8f9fa"]
 const DEFAULT_COLOR = '#9980FA'
 const fmt = d3.format(",")
 
 const Timeline = ({
   data, xAccessor, yAccessor, xLabel, yLabel,
-  color, gradientColors: gradientColorsProp,
+  color, gradientColors,
   interpolation, showArea, showDots,
   formatXTick, formatYTick,
   showLegend, legendPosition,
 }) => {
   const [ref, dimensions] = useChartDimensions({ marginBottom: 77 })
   const gradientId = useUniqueId("Timeline-gradient")
-  const wrapperRef = useRef()
-  const [hovered, setHovered] = useState(null)
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0 })
+  const { wrapperRef, tooltip, showTooltip, hideTooltip } = useTooltip()
+  const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  if (!data || data.length === 0) return null
+  const resolvedGradientColors = gradientColors
+    || (color ? [`${color}55`, "rgba(255,255,255,0)"] : DEFAULT_GRADIENT)
 
-  const resolvedGradientColors = gradientColorsProp
-    || (color ? [`${color}55`, "rgba(255,255,255,0)"] : defaultGradientColors)
+  const xScale = useMemo(() =>
+    d3.scaleTime()
+      .domain(d3.extent(data, xAccessor))
+      .range([0, dimensions.boundedWidth]),
+    [data, xAccessor, dimensions.boundedWidth]
+  )
 
-  const xScale = d3.scaleTime()
-    .domain(d3.extent(data, xAccessor))
-    .range([0, dimensions.boundedWidth])
+  const yScale = useMemo(() =>
+    d3.scaleLinear()
+      .domain(d3.extent(data, yAccessor))
+      .range([dimensions.boundedHeight, 0])
+      .nice(),
+    [data, yAccessor, dimensions.boundedHeight]
+  )
 
-  const yScale = d3.scaleLinear()
-    .domain(d3.extent(data, yAccessor))
-    .range([dimensions.boundedHeight, 0])
-    .nice()
+  const legendItems = useMemo(() =>
+    yLabel ? [{ color: color || DEFAULT_COLOR, label: yLabel }] : [],
+    [yLabel, color]
+  )
 
-  const xAccessorScaled = d => xScale(xAccessor(d))
-  const yAccessorScaled = d => yScale(yAccessor(d))
-  const y0AccessorScaled = yScale(yScale.domain()[0])
+  const bisect = useMemo(() => d3.bisector(xAccessor).left, [xAccessor])
 
-  const bisect = d3.bisector(xAccessor).left
-
-  const handleMouseMove = e => {
+  const handleMouseMove = useCallback(e => {
     const svgEl = e.currentTarget.ownerSVGElement
-    const svgBounds = svgEl.getBoundingClientRect()
-    const mouseX = e.clientX - svgBounds.left - dimensions.marginLeft
-
+    const { left: svgLeft } = svgEl.getBoundingClientRect()
+    const mouseX = e.clientX - svgLeft - dimensions.marginLeft
     const date = xScale.invert(mouseX)
     const idx = bisect(data, date, 1)
     const d0 = data[idx - 1]
     const d1 = data[idx]
-    const hoveredDatum = !d1 || (d0 && date - xAccessor(d0) < xAccessor(d1) - date)
-      ? idx - 1 : idx
+    const i = !d1 || (d0 && date - xAccessor(d0) < xAccessor(d1) - date) ? idx - 1 : idx
+    setHoveredIndex(i)
+    showTooltip(e, { datum: data[i] })
+  }, [data, xAccessor, xScale, bisect, dimensions.marginLeft, showTooltip])
 
-    setHovered(hoveredDatum)
+  const handleMouseLeave = useCallback(() => {
+    setHoveredIndex(null)
+    hideTooltip()
+  }, [hideTooltip])
 
-    const { left, top } = wrapperRef.current.getBoundingClientRect()
-    setTooltip({ visible: true, x: e.clientX - left, y: e.clientY - top })
-  }
+  if (!data || data.length === 0) return null
 
-  const handleMouseLeave = () => {
-    setHovered(null)
-    setTooltip(t => ({ ...t, visible: false }))
-  }
-
-  const hoveredDatum = hovered !== null ? data[hovered] : null
+  const xAccessorScaled = d => xScale(xAccessor(d))
+  const yAccessorScaled = d => yScale(yAccessor(d))
+  const y0AccessorScaled = yScale(yScale.domain()[0])
+  const hoveredDatum = hoveredIndex !== null ? data[hoveredIndex] : null
   const yFmt = formatYTick || fmt
   const xFmt = formatXTick || formatTooltipDate
 
-  const legendItems = yLabel
-    ? [{ color: color || DEFAULT_COLOR, label: yLabel }]
-    : []
-  const resolvedPosition = legendPosition || 'bottom'
-  const isHorizontal = resolvedPosition === 'left' || resolvedPosition === 'right'
-  const isLeading = resolvedPosition === 'top' || resolvedPosition === 'left'
-
-  const chart = (
-    <div className="Timeline" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-      <Chart dimensions={dimensions} label={yLabel || xLabel}>
-        <defs>
-          <Gradient id={gradientId} colors={resolvedGradientColors} x2="0" y2="100%" />
-        </defs>
-        <Axis dimension="x" scale={xScale} formatTick={formatXTick || formatDate} label={xLabel} />
-        <Axis dimension="y" scale={yScale} formatTick={formatYTick} label={yLabel} />
-        {showArea !== false && (
-          <Line
-            type="area"
-            data={data}
-            xAccessor={xAccessorScaled}
-            yAccessor={yAccessorScaled}
-            y0Accessor={y0AccessorScaled}
-            style={{ fill: `url(#${gradientId})` }}
-            interpolation={interpolation}
-          />
-        )}
-        <Line
-          data={data}
-          xAccessor={xAccessorScaled}
-          yAccessor={yAccessorScaled}
-          style={color ? { stroke: color } : undefined}
-          interpolation={interpolation}
-        />
-        {showDots && (
-          <Circles
-            data={data}
-            keyAccessor={(d, i) => i}
-            xAccessor={xAccessorScaled}
-            yAccessor={yAccessorScaled}
-            color={color}
-          />
-        )}
-        {hoveredDatum && (
-          <>
-            <line
-              className="Timeline__hover-line"
-              x1={xAccessorScaled(hoveredDatum)}
-              x2={xAccessorScaled(hoveredDatum)}
-              y1={0}
-              y2={dimensions.boundedHeight}
-            />
-            <circle
-              className="Timeline__hover-dot"
-              cx={xAccessorScaled(hoveredDatum)}
-              cy={yAccessorScaled(hoveredDatum)}
-              r={5}
-              style={{ stroke: color || DEFAULT_COLOR }}
-            />
-          </>
-        )}
-        <rect
-          x={0}
-          y={0}
-          width={dimensions.boundedWidth}
-          height={dimensions.boundedHeight}
-          fill="none"
-          style={{ pointerEvents: 'all' }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        />
-      </Chart>
-    </div>
-  )
-
-  const legend = showLegend && legendItems.length > 0
-    ? <Legend items={legendItems} position={resolvedPosition} />
-    : null
-
   return (
-    <div ref={wrapperRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: isHorizontal ? 'row' : 'column', position: 'relative' }}>
-      {isLeading && legend}
-      {chart}
-      {!isLeading && legend}
+    <ChartLayout wrapperRef={wrapperRef} legendItems={legendItems} showLegend={showLegend} legendPosition={legendPosition} tooltip={
       <Tooltip visible={tooltip.visible} x={tooltip.x} y={tooltip.y}>
-        {hoveredDatum && (
+        {tooltip.datum && (
           <>
-            <div><strong>{xFmt(xAccessor(hoveredDatum))}</strong></div>
-            <div>{yLabel || 'Value'}: {yFmt(yAccessor(hoveredDatum))}</div>
+            <div><strong>{xFmt(xAccessor(tooltip.datum))}</strong></div>
+            <div>{yLabel || 'Value'}: {yFmt(yAccessor(tooltip.datum))}</div>
           </>
         )}
       </Tooltip>
-    </div>
+    }>
+      <div className="Timeline" ref={ref} style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+        <Chart dimensions={dimensions} label={yLabel || xLabel}>
+          <defs>
+            <Gradient id={gradientId} colors={resolvedGradientColors} x2="0" y2="100%" />
+          </defs>
+          <Axis dimension="x" scale={xScale} formatTick={formatXTick || formatDate} label={xLabel} />
+          <Axis dimension="y" scale={yScale} formatTick={formatYTick} label={yLabel} />
+          {showArea !== false && (
+            <Line
+              type="area"
+              data={data}
+              xAccessor={xAccessorScaled}
+              yAccessor={yAccessorScaled}
+              y0Accessor={y0AccessorScaled}
+              style={{ fill: `url(#${gradientId})` }}
+              interpolation={interpolation}
+            />
+          )}
+          <Line
+            data={data}
+            xAccessor={xAccessorScaled}
+            yAccessor={yAccessorScaled}
+            style={color ? { stroke: color } : undefined}
+            interpolation={interpolation}
+          />
+          {showDots && (
+            <Circles
+              data={data}
+              keyAccessor={(d, i) => i}
+              xAccessor={xAccessorScaled}
+              yAccessor={yAccessorScaled}
+              color={color}
+            />
+          )}
+          {hoveredDatum && (
+            <>
+              <line
+                className="Timeline__hover-line"
+                x1={xAccessorScaled(hoveredDatum)}
+                x2={xAccessorScaled(hoveredDatum)}
+                y1={0}
+                y2={dimensions.boundedHeight}
+              />
+              <circle
+                className="Timeline__hover-dot"
+                cx={xAccessorScaled(hoveredDatum)}
+                cy={yAccessorScaled(hoveredDatum)}
+                r={5}
+                style={{ stroke: color || DEFAULT_COLOR }}
+              />
+            </>
+          )}
+          <rect
+            x={0} y={0}
+            width={dimensions.boundedWidth}
+            height={dimensions.boundedHeight}
+            fill="none"
+            style={{ pointerEvents: 'all' }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          />
+        </Chart>
+      </div>
+    </ChartLayout>
   )
 }
 
