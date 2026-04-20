@@ -77,6 +77,15 @@
     opacity: 0.35;
 }
 
+.StackedBar__segment {
+    transition: opacity 0.15s ease-out;
+    cursor: pointer;
+}
+
+.StackedBarChart:has(.StackedBar__segment:hover) .StackedBar__segment:not(:hover) {
+    opacity: 0.35;
+}
+
 /* Timeline hover elements */
 .Timeline__hover-line {
     stroke: #aaa;
