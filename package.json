@@ -1,6 +1,6 @@
 {
   "name": "quick-charts",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simple charts for react",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
