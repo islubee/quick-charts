@@ -4,6 +4,10 @@
   "description": "Simple charts for react",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/islubee/quick-charts.git"
+  },
   "scripts": {
     "test": "jest",
     "storybook": "start-storybook -p 6006",
